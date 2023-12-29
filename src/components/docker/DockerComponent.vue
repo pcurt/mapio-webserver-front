@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-    import { ref, Ref } from 'vue'
+    import { ref, onMounted, Ref } from 'vue'
     import axios from 'axios'
     import { useToast } from 'vue-toastification'
 
@@ -9,9 +9,10 @@
     }
 
     const toast = useToast()
-    const OutputApiBaseUrl = 'http://' + location.hostname + ':8456/docker'
+    const DockerUrl = 'http://' + location.hostname + ':8456/docker'
 
     const services: Ref<Service[]> = ref(getAllServices())
+    const runningContainers = ref([])
 
     function getAllServices() {
         const AllServices: Service[] = []
@@ -28,10 +29,29 @@
         const select_action = [{ action: action }]
         const data = services.value.concat(select_action)
         const payload = JSON.stringify(data)
-        axios.post(OutputApiBaseUrl, payload).catch((error) => console.log(error))
+        axios.post(DockerUrl, payload).catch((error) => console.log(error))
 
         toast.success('Action has been asked, please wait ...')
     }
+
+    const fetchData = () => {
+        axios
+            .get(DockerUrl)
+            .then((response) => {
+                runningContainers.value = response.data.map((item: { name: string }) => item.name)
+            })
+            .catch((error) => {
+                console.error('GET error:', error)
+            })
+    }
+
+    onMounted(() => {
+        fetchData()
+    })
+
+    const interval = setInterval(() => {
+        fetchData()
+    }, 1000) // Refresh period 1000 millisecondes
 </script>
 
 <template>
@@ -40,6 +60,7 @@
             <tr>
                 <th class="text-left">Service name</th>
                 <th class="text-left">Select</th>
+                <th class="text-center">Container status</th>
             </tr>
         </thead>
         <tbody>
@@ -47,6 +68,14 @@
                 <td>{{ item.service }}</td>
                 <td>
                     <v-switch v-model="item.selected" color="blue"></v-switch>
+                </td>
+                <td class="text-center">
+                    <v-icon
+                        v-if="runningContainers.some((service) => service.toLowerCase() === item.service.toLowerCase())"
+                        class="status-icon">
+                        mdi-play-circle-outline
+                    </v-icon>
+                    <v-icon v-else class="status-icon"> mdi-stop </v-icon>
                 </td>
             </tr>
         </tbody>
