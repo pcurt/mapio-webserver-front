@@ -7,5 +7,4 @@ import Toast from 'vue-toastification'
 import './index.css'
 import 'vue-toastification/dist/index.css'
 
-
 createApp(App).use(createPinia()).use(router).use(vuetify).use(Toast).mount('#app')
