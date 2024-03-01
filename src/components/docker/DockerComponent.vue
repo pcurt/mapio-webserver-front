@@ -8,11 +8,19 @@
         service: string
     }
 
+    interface Container {
+        name: string
+        status: string
+    }
+
     const toast = useToast()
     const DockerUrl = 'http://' + location.hostname + ':8456/docker'
+    const DockerUrlCustom = 'http://' + location.hostname + ':8456/docker-custom'
 
     const services: Ref<Service[]> = ref(getAllServices())
     const runningContainers = ref([])
+    const switchValues: Ref<Record<string, boolean>> = ref({})
+    const runningContainersFiltered = ref<Container[]>([])
 
     function getAllServices() {
         const AllServices: Service[] = []
@@ -34,11 +42,45 @@
         toast.success('Action has been asked, please wait ...')
     }
 
+    function actioncustom(action: string) {
+        const selectedServices = Object.entries(switchValues.value)
+            .filter(([serviceName, isSelected]) => isSelected)
+            .map(([serviceName, isSelected]) => serviceName)
+        const payload = JSON.stringify({ selectedServices, select_action: action })
+
+        axios.post(DockerUrlCustom, payload).catch((error) => console.log(error))
+
+        toast.success('Action has been asked, please wait ...')
+    }
+
     const fetchData = () => {
         axios
             .get(DockerUrl)
             .then((response) => {
                 runningContainers.value = response.data.map((item: { name: string }) => item.name)
+            })
+            .catch((error) => {
+                console.error('GET error:', error)
+            })
+        axios
+            .get(DockerUrlCustom)
+            .then((response) => {
+                const containersData: { name: string; status: string }[] = response.data
+                const excludedContainers = [
+                    'homeassistant',
+                    'domoticz',
+                    'jellyfin',
+                    'nextcloud',
+                    'samba',
+                    'zigbee2mqtt',
+                ]
+                const containersWithStatus: Container[] = containersData
+                    .filter((container) => !excludedContainers.includes(container.name))
+                    .map((container) => ({
+                        name: container.name,
+                        status: container.status,
+                    }))
+                runningContainersFiltered.value = containersWithStatus
             })
             .catch((error) => {
                 console.error('GET error:', error)
@@ -55,6 +97,7 @@
 </script>
 
 <template>
+    <h1>Docker native</h1>
     <v-table>
         <thead>
             <tr>
@@ -83,4 +126,33 @@
     <v-btn color="primary" class="ma-2 pa-2" @click="() => action('restart')">Start/Restart</v-btn>
     <v-btn color="primary" class="ma-2 pa-2" @click="() => action('stop')">Stop</v-btn>
     <v-btn color="primary" class="ma-2 pa-2" @click="() => action('update')">Enable/Update</v-btn>
+
+    <div class="docker ma-5">
+        <h1>Docker custom</h1>
+        <v-table>
+            <thead>
+                <tr>
+                    <th class="text-left">Service name</th>
+                    <th class="text-left">Select</th>
+                    <th class="text-center">Container status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="item in runningContainersFiltered" :key="item.name">
+                    <td>{{ item.name }}</td>
+                    <td>
+                        <v-switch v-model="switchValues[item.name]" color="blue"></v-switch>
+                    </td>
+
+                    <td class="text-center">
+                        <v-icon class="status-icon" v-if="item.status === 'Up'">mdi-play-circle-outline</v-icon>
+                        <v-icon class="status-icon" v-else>mdi-stop</v-icon>
+                    </td>
+                </tr>
+            </tbody>
+        </v-table>
+
+        <v-btn color="primary" class="ma-2 pa-2" @click="() => actioncustom('start')">Start</v-btn>
+        <v-btn color="primary" class="ma-2 pa-2" @click="() => actioncustom('stop')">Stop</v-btn>
+    </div>
 </template>

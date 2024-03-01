@@ -4,7 +4,6 @@
 
 <template>
     <div class="docker ma-5">
-        <h1>Docker setup</h1>
         <DockerComponent />
     </div>
 </template>
