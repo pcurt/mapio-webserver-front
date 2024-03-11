@@ -10,6 +10,7 @@
             <li>∙ Start, stop and update some Docker services</li>
             <li>∙ Create your MAPIO SSH access</li>
             <li>∙ Update MAPIO OS</li>
+            <li>∙ Monitor docker compose logs</li>
         </ul>
         <v-img max-height="150px" max-width="150px" src="/mapio_logo.png" class="ml-auto"></v-img>
     </div>

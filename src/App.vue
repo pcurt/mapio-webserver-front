@@ -25,6 +25,7 @@
                     <v-list-item prepend-icon="mdi-update" title="update" value="update" href="/update"></v-list-item>
                     <v-list-item prepend-icon="mdi-ssh" title="ssh" value="ssh" href="/ssh"></v-list-item>
                     <v-list-item prepend-icon="mdi-docker" title="docker" value="docker" href="/docker"></v-list-item>
+                    <v-list-item prepend-icon="mdi-text-box" title="logs" value="logs" href="/logs"></v-list-item>
                 </v-list>
             </v-navigation-drawer>
             <v-main>

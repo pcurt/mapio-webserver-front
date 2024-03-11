@@ -30,6 +30,11 @@ const routes: Array<RouteRecordRaw> = [
         name: 'docker',
         component: () => import('../views/DockerView.vue'),
     },
+    {
+        path: '/logs',
+        name: 'logs',
+        component: () => import('../views/LogsView.vue'),
+    },
 ]
 
 const router = createRouter({
